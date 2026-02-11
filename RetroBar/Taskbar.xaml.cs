@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using Application = System.Windows.Application;
 
 namespace RetroBar
@@ -59,6 +60,7 @@ namespace RetroBar
             InitializeComponent();
             DataContext = _shellManager;
             StartButton.StartMenuMonitor = startMenuMonitor;
+            UpdateScaleRendering();
 
             RecalculateSize(false);
 
@@ -186,6 +188,7 @@ namespace RetroBar
                 PeekDuringAutoHide();
                 RecalculateSize();
                 OnPropertyChanged(nameof(IsScaled));
+                UpdateScaleRendering();
             }
             else if (e.PropertyName == nameof(Settings.AutoHide))
             {
@@ -448,6 +451,20 @@ namespace RetroBar
         private void ResetControlFocus()
         {
             FocusDummyButton.MoveFocus(new TraversalRequest(FocusNavigationDirection.Left));
+        }
+
+        private void UpdateScaleRendering()
+        {
+            if (Settings.Instance.TaskbarScale > 1)
+            {
+                // Rasterise the content at 1x so WPF's nearest-neighbour upscale produces
+                // clean pixel-doubled retro text instead of blurry bilinear text.
+                TaskbarContentControl.CacheMode = new BitmapCache { RenderAtScale = 1 };
+            }
+            else
+            {
+                TaskbarContentControl.CacheMode = null;
+            }
         }
 
         private void SetLayoutRounding()
