@@ -18,6 +18,7 @@
         <ResourceDictionary>
             <converters:BoolToTextRenderingModeConverter x:Key="textRenderingModeConverter" />
             <converters:SettingsToTextFormattingModeConverter x:Key="textFormattingModeConverter" />
+            <converters:SettingsToBitmapScalingModeConverter x:Key="bitmapScalingModeConverter" />
             <converters:EdgeOrientationConverter x:Key="edgeOrientationConverter" />
             <converters:DockOrientationConverter x:Key="dockOrientationConverter" />
             <converters:BoolToVisibilityConverter x:Key="boolToVisibilityConverter" />
@@ -45,7 +46,8 @@
                  Path="AllowFontSmoothing"
                  Converter="{StaticResource textRenderingModeConverter}" />
     </TextOptions.TextRenderingMode>
-    <ContentControl Style="{DynamicResource Taskbar}" x:Name="TaskbarContentControl">
+    <ContentControl Style="{DynamicResource Taskbar}" x:Name="TaskbarContentControl"
+                    RenderOptions.BitmapScalingMode="{Binding Source={x:Static utilities:Settings.Instance}, Path=TaskbarScale, Converter={StaticResource bitmapScalingModeConverter}}">
         <ContentControl.LayoutTransform>
             <ScaleTransform x:Name="TaskbarScaleTransform"
                             ScaleX="{Binding Source={x:Static utilities:Settings.Instance}, Path=TaskbarScale}"
