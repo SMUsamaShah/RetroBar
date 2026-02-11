@@ -457,15 +457,7 @@ namespace RetroBar
         {
             double scale = Settings.Instance.TaskbarScale;
 
-            if (scale <= 1)
-            {
-                TaskbarContentControl.CacheMode = null;
-                return;
-            }
-
-            bool isIntegerScale = scale % 1 == 0;
-
-            if (isIntegerScale)
+            if (scale > 1 && scale % 1 == 0)
             {
                 // Integer scale (2×, 3×, …): rasterise at 1× then pixel-double with
                 // NearestNeighbor for a clean blocky retro look.
@@ -474,11 +466,10 @@ namespace RetroBar
             }
             else
             {
-                // Non-integer scale (1.25×, 1.5×, 1.75×, …): rasterise at the exact target
-                // resolution so the cached bitmap maps 1:1 to display pixels — no
-                // interpolation, no blur, no uneven pixel widths.
-                TaskbarContentControl.CacheMode = new BitmapCache { RenderAtScale = scale };
-                RenderOptions.SetBitmapScalingMode(TaskbarContentControl, BitmapScalingMode.Linear);
+                // Scale = 1× or non-integer scale: no BitmapCache needed.
+                // Non-integer scales rely on TextFormattingMode.Ideal (set by the converter)
+                // for smooth blur-free vector scaling.
+                TaskbarContentControl.CacheMode = null;
             }
         }
 
