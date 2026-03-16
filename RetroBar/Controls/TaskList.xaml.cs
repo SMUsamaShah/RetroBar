@@ -6,6 +6,7 @@ using System;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 
 namespace RetroBar.Controls
 {
@@ -21,6 +22,7 @@ namespace RetroBar.Controls
         private double TaskButtonLeftMargin;
         private double TaskButtonRightMargin;
         private ICollectionView taskbarItems;
+        private DispatcherTimer _zombieCleanupTimer;
 
         public static DependencyProperty ButtonWidthProperty = DependencyProperty.Register(nameof(ButtonWidth), typeof(double), typeof(TaskList), new PropertyMetadata(new double()));
 
@@ -92,8 +94,21 @@ namespace RetroBar.Controls
                 Settings.Instance.PropertyChanged += Settings_PropertyChanged;
                 Host.hotkeyManager.TaskbarHotkeyPressed += TaskList_TaskbarHotkeyPressed;
 
+                _zombieCleanupTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+                _zombieCleanupTimer.Tick += (s, e) => taskbarItems?.Refresh();
+                _zombieCleanupTimer.Start();
+
                 isLoaded = true;
             }
+        }
+
+        /// <summary>
+        /// Forces a re-evaluation of the task list filter, removing buttons for windows
+        /// that are no longer valid (e.g. processes that were forcefully killed).
+        /// </summary>
+        public void TriggerWindowListRefresh()
+        {
+            taskbarItems?.Refresh();
         }
 
         private static void TasksChangedCallback(DependencyObject sender, DependencyPropertyChangedEventArgs e)
@@ -202,6 +217,9 @@ namespace RetroBar.Controls
             }
 
             Settings.Instance.PropertyChanged -= Settings_PropertyChanged;
+
+            _zombieCleanupTimer?.Stop();
+            _zombieCleanupTimer = null;
 
             isLoaded = false;
         }

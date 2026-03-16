@@ -151,10 +151,22 @@ namespace RetroBar.Controls
             _isLoaded = false;
         }
 
+        private bool IsWindowHandleValid()
+        {
+            return Window != null && NativeMethods.IsWindow(Window.Handle);
+        }
+
         private void AppButton_OnContextMenuOpening(object sender, ContextMenuEventArgs e)
         {
             if (Window == null)
             {
+                return;
+            }
+
+            if (!IsWindowHandleValid())
+            {
+                e.Handled = true;
+                Host?.TriggerWindowListRefresh();
                 return;
             }
 
@@ -242,6 +254,12 @@ namespace RetroBar.Controls
 
         private void AppButton_OnClick(object sender, RoutedEventArgs e)
         {
+            if (!IsWindowHandleValid())
+            {
+                Host?.TriggerWindowListRefresh();
+                return;
+            }
+
             if (PressedWindowState == ApplicationWindow.WindowState.Active && Window?.CanMinimize == true)
             {
                 Window?.Minimize();
