@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using Application = System.Windows.Application;
 
 namespace RetroBar
@@ -59,6 +60,7 @@ namespace RetroBar
             InitializeComponent();
             DataContext = _shellManager;
             StartButton.StartMenuMonitor = startMenuMonitor;
+            UpdateScaleRendering();
 
             RecalculateSize(false);
 
@@ -186,6 +188,7 @@ namespace RetroBar
                 PeekDuringAutoHide();
                 RecalculateSize();
                 OnPropertyChanged(nameof(IsScaled));
+                UpdateScaleRendering();
             }
             else if (e.PropertyName == nameof(Settings.AutoHide))
             {
@@ -448,6 +451,26 @@ namespace RetroBar
         private void ResetControlFocus()
         {
             FocusDummyButton.MoveFocus(new TraversalRequest(FocusNavigationDirection.Left));
+        }
+
+        private void UpdateScaleRendering()
+        {
+            double scale = Settings.Instance.TaskbarScale;
+
+            if (scale > 1 && scale % 1 == 0)
+            {
+                // Integer scale (2×, 3×, …): rasterise at 1× then pixel-double with
+                // NearestNeighbor for a clean blocky retro look.
+                TaskbarContentControl.CacheMode = new BitmapCache { RenderAtScale = 1 };
+                RenderOptions.SetBitmapScalingMode(TaskbarContentControl, BitmapScalingMode.NearestNeighbor);
+            }
+            else
+            {
+                // Scale = 1× or non-integer scale: no BitmapCache needed.
+                // Non-integer scales rely on TextFormattingMode.Ideal (set by the converter)
+                // for smooth blur-free vector scaling.
+                TaskbarContentControl.CacheMode = null;
+            }
         }
 
         private void SetLayoutRounding()
